@@ -1,140 +1,110 @@
 # 🧬 LifeSync – Aplicación Dockerizada  
 Plataforma de bienestar y estilo de vida saludable
 
-Este repositorio contiene todo lo necesario para ejecutar **LifeSync** utilizando **Docker**, incluyendo:
+Este repositorio contiene todo lo necesario para ejecutar LifeSync utilizando Docker, incluyendo:
 
-- Backend con Spring Boot  
+- Backend desarrollado en Spring Boot  
 - Base de datos PostgreSQL  
-- Orquestación con Docker Compose  
-- Instrucciones completas de ejecución  
-- Usuarios de prueba con sus credenciales reales  
+- Configuración mediante Docker Compose  
+- Instrucciones completas de uso  
+- Usuarios de prueba con credenciales reales  
 
 ---
 
 ## 🚀 ¿Qué es LifeSync?
 
-**LifeSync** es una aplicación orientada al bienestar, permitiendo a los usuarios llevar un control de:
+LifeSync es una aplicación orientada al bienestar personal, creada para ayudar a los usuarios a gestionar:
 
-- Información física (edad, peso, altura)  
+- Datos físicos (edad, peso, altura)  
 - Objetivo de peso  
-- Hidratación  
-- Recetas  
+- Consumo de agua  
+- Recetas y alimentación  
 - Rachas (streaks)  
-- Roles especializados (ADMIN, USER, CATADOR)
+- Roles de usuario (ADMIN, USER, CATADOR)
 
-Está desarrollada con **Spring Boot** + **PostgreSQL**, siguiendo arquitectura modular y limpia.
+El proyecto está construido con Spring Boot y PostgreSQL, aplicando arquitectura modular y limpia.
 
 ---
 
 # 🐳 Arquitectura Docker
 
-La aplicación utiliza los siguientes servicios:
+La aplicación se ejecuta mediante dos contenedores principales:
+
+### 1. PostgreSQL – Base de Datos  
+- Base de datos: LifeSyncDB  
+- Usuario: admin  
+- Contraseña: admin123  
+- Datos persistidos en un volumen Docker  
+- Ejecutado dentro de la red interna lifesync-net
+
+### 2. Spring Boot – Backend  
+- Expuesto en el puerto 8082  
+- Conectado automáticamente al contenedor PostgreSQL  
+- Gestiona entidades como Usuario, Hidratación, Recetas y Rachas  
 
 ---
 
-### **1️⃣ Base de Datos – PostgreSQL**
+# 👥 Usuarios de prueba
 
-- Imagen: `postgres:15`
-- Puerto: `5432`
-- Base creada: `LifeSyncDB`
-- Usuario/contraseña definidos mediante variables de entorno
-- Datos persistidos vía volumen `postgres_data`
+Estos usuarios están preconfigurados para realizar pruebas de autenticación dentro del sistema LifeSync.
+
+### Administrador
+- Correo: admin@test.com  
+- Contraseña: Admin123!  
+- Rol: ADMIN  
+
+### Usuario general
+- Correo: user@test.com  
+- Contraseña: User123!  
+- Rol: USER  
+
+### Catador
+- Correo: catador@test.com  
+- Contraseña: Cat123!  
+- Rol: CATADOR  
 
 ---
 
-### **2️⃣ Backend – Spring Boot**
+# ▶️ Instrucciones para ejecutar el proyecto
 
-- Construido desde el Dockerfile ubicado en `/LifeSync-Backend`
-- Se levanta en el puerto `8082`
-- Variables de entorno conectan automáticamente al contenedor de PostgreSQL
-- Usa JPA + Hibernate para gestionar las tablas
+1. Clonar el repositorio en tu máquina local.  
+2. Asegurarte de tener Docker Desktop instalado y funcionando.  
+3. Ejecutar Docker Compose para levantar la base de datos y el backend.  
+4. Una vez levantados los contenedores, acceder a los endpoints del backend mediante el puerto 8082.  
+5. Puedes verificar el funcionamiento accediendo a la ruta de usuarios, por ejemplo:  
+   `http://localhost:8082/api/usuario/all`
 
 ---
 
-# 📦 Archivo `docker-compose.yml`
+# 🔍 Conexión a la base de datos
 
-```yaml
-version: "3.9"
+Puedes conectarte manualmente a PostgreSQL utilizando herramientas como PgAdmin, TablePlus o DBeaver.  
+Los valores de conexión son:
 
-services:
-  db:
-    image: postgres:15
-    container_name: lifesync-db
-    restart: always
-    environment:
-      POSTGRES_DB: LifeSyncDB
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - lifesync-net
+- Host: localhost  
+- Puerto: 5432  
+- Base de datos: LifeSyncDB  
+- Usuario: admin  
+- Contraseña: admin123  
 
-  backend:
-    build:
-      context: ./LifeSync-Backend
-    container_name: lifesync-backend
-    restart: always
-    depends_on:
-      - db
-    ports:
-      - "8082:8082"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/LifeSyncDB
-      SPRING_DATASOURCE_USERNAME: admin
-      SPRING_DATASOURCE_PASSWORD: admin123
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    networks:
-      - lifesync-net
+---
 
-volumes:
-  postgres_data:
+# 🛠️ Comandos útiles
 
-networks:
-  lifesync-net:
+- Para detener los contenedores: usar el comando correspondiente en Docker Desktop o mediante Docker Compose.  
+- Para eliminar volúmenes y datos persistentes: utilizar la opción de limpieza de Docker.  
+- Para reiniciar solamente el backend: reiniciar el contenedor llamado lifesync-backend.
 
+---
 
-👥 Usuarios de prueba (credenciales)
+los siguiente hara:
+- La base de datos PostgreSQL
 
-Estos usuarios ya están listos para iniciar sesión en la aplicación:
+- El backend Spring Boot
 
-🛡️ Administrador
+- La red interna lifesync-net
 
-Correo: admin@test.com
-Contraseña: Admin123!
-Rol: ADMIN
-
-👤 Usuario estándar
-
-Correo: user@test.com
-Contraseña: User123!
-Rol: USER
-
-🧪 Catador
-
-Correo: catador@test.com
-Contraseña: Cat123!
-Rol: CATADOR
-
-
-
-▶️ Instrucciones para ejecutar el proyecto
-1. Clonar el repositorio
+```bash
 git clone https://github.com/tu-usuario/LifeSync.git
 cd LifeSync
-
-2. Levantar los contenedores
 docker compose up -d
-
-
-Esto:
-
-Construirá el backend
-
-Levantará PostgreSQL
-
-Conectará ambos servicios
-
-Creará las tablas automáticamente
