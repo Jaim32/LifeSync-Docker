@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: lifesync-db
+    restart: always
+    environment:
+      POSTGRES_DB: LifeSyncDB
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Si quieres que cree usuarios iniciales, descomenta esta línea:
+      # - ./init:/docker-entrypoint-initdb.d
+    networks:
+      - lifesync-net
+
+  backend:
+    build:
+      context: ./LifeSync-Backend
+      dockerfile: dockerfile
+    container_name: lifesync-backend
+    restart: always
+    depends_on:
+      - db
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/LifeSyncDB
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    networks:
+      - lifesync-net
+
+  frontend:
+    build:
+      context: ./LifeSync
+      dockerfile: dockerfile
+    container_name: lifesync-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "4028:80"
+    networks:
+      - lifesync-net
+
+  images-server:
+    build:
+      context: ./LifeSync
+      dockerfile: dockerfile-server
+    container_name: lifesync-images
+    restart: always
+    ports:
+      - "4029:4029"
+    volumes:
+      - ./LifeSync/uploads:/app/uploads
+    networks:
+      - lifesync-net
+
+networks:
+  lifesync-net:
+
+volumes:
+  postgres_data:
